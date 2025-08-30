@@ -16,10 +16,55 @@
 <body>
 
   <div class="container">
-    <ul id="repos">
+    <ul id="images-root">
     </ul>
     <div id="platform">
     </div>
+
+    <template id="image-template">
+      <li class="image">
+          <strong id="repo-name"></strong> : <span id="image-version"></span>
+          (<span id="image-platform-count"></span> platforms)
+          <div class="image-meta">
+            <div>Created: <time id="image-created"></time></div>
+            <div>Shared tags: <span id="image-shared-tags"></span></div>
+          </div>
+          <ul id="platforms"></ul>
+      </li>
+    </template>
+
+    <template id="platform-template">
+      <li class="platform">
+        <details>
+          <summary>
+            <span id="platform-arch"></span>
+            - <span id="platform-os"></span>
+            (<span id="platform-layer-count"></span> layers, <span id="platform-total-size"></span>)
+          </summary>
+          <div class="platform-meta">
+            <div>Digest: <code id="platform-digest"></code></div>
+            <div>Base image digest: <code id="platform-base-digest"></code></div>
+            <div>Created: <time id="platform-created"></time></div>
+            <div>Dockerfile: <a id="platform-dockerfile" target="_blank" rel="noopener"></a></div>
+            <div>Tags: <span id="platform-tags"></span></div>
+            <details class="layers-details">
+              <summary>Layers</summary>
+              <ol id="layers"></ol>
+            </details>
+          </div>
+        </details>
+      </li>
+    </template>
+
+    <template id="summary-template">
+      <div class="summary-block">
+        <h1>.NET image explorer</h1>
+        <p>Total repos: <strong id="summary-repo-count"></strong></p>
+        <p>Total images: <strong id="summary-image-count"></strong></p>
+        <p>Total platforms: <strong id="summary-platform-count"></strong></p>
+        <p>Total compressed size (layers summed, dedupe per layer digest): <strong id="summary-total-size"></strong></p>
+      </div>
+    </template>
   </div>
 
 </body>
