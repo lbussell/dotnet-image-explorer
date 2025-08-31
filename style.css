@@ -21,7 +21,11 @@
   --yellow-tint: #fdf0da;
   --code-light: #00467e;
   --code-dark: #b6d3ff;
-  --code-lines: #7a7a7a;
+
+  --code-lines: #6e6e6e;
+  --text-dim: rgba(0, 0, 0, 0.6);
+  --dim-highlight: rgba(0, 0, 0, 0.05);
+  --dim-highlight-text: rgba(0, 0, 0, 0.65);
 
   --background: #F4F6F9;
   --background-shade: #dcdde0;
@@ -46,6 +50,8 @@
     4.8px 9.5px 12px -1.8px hsl(var(--shadow-color) / 0.34),
     7.3px 14.4px 18.2px -2.1px hsl(var(--shadow-color) / 0.34),
     10.8px 21.2px 26.8px -2.5px hsl(var(--shadow-color) / 0.34);
+
+    --transition: 0.1s;
 }
 
 body {
@@ -114,7 +120,7 @@ code {
   /* color: var(--code-light); */
 }
 
-#images-root {
+#images-list {
   list-style: none;
 }
 
@@ -124,6 +130,14 @@ code {
 
 #platform-dockerfile {
   float: right;
+}
+
+#osfamily-filter {
+  width: 25ch;
+}
+
+#repo-filter {
+  width: 25ch;
 }
 
 .navbar {
@@ -184,7 +198,7 @@ li {
   border: 1px solid var(--purple-tint);
   padding: 0.2rem 0.5rem;
   border-radius: 0.5rem;
-  transition-duration: 0.1s;
+  transition-duration: var(--transition);
 
   &:hover {
     background-color: var(--purple-tint);
@@ -195,8 +209,8 @@ li {
 
 .label {
   font-size: 14px;
-  font-weight: 700;
-  color: var(--code-lines);
+  font-weight: 500;
+  color: var(--text-dim);
   padding-left: 0.25rem;
 }
 
@@ -227,4 +241,42 @@ li {
 
 .time {
   font-weight: 700;
+}
+
+.filters-container {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.filters-container label {
+  padding-left: 0.5rem;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.filter-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.filters-container select {
+  padding: 0.25rem 0.5rem;
+  margin-right: 1rem;
+  width: 15ch;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  color: var(--text-dim);
+  font-weight: 500;
+
+  transition-duration: var(--transition);
+
+  &:hover {
+    background-color: var(--dim-highlight);
+    color: var(--dim-highlight-text);
+    /* border-color: var(--purple-primary); */
+    /* color: white; */
+  }
 }

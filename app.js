@@ -6,15 +6,92 @@ window.onload = main;
 
 async function main() {
 
-  const imagesRoot = document.getElementById("images-root");
-  if (!imagesRoot) {
+  const imagesList = document.getElementById("images-list");
+  if (!imagesList) {
     return;
   }
 
   const data = await getImageInfo();
 
   const images = renderImages(data);
-  images.forEach(documentFragment => imagesRoot.appendChild(documentFragment));
+  images.forEach(documentFragment => imagesList.appendChild(documentFragment));
+
+  const imageEntries = imagesList.querySelectorAll("#image-entry");
+  const selectsContainer = document.getElementById("filter-selects");
+
+  const filters = {
+    repo: "",
+    osfamily: "",
+    isdistroless: "",
+    globalization: "",
+  }
+
+  Object.keys(filters).forEach(filterKey => {
+    setupImageFilter(imageEntries, selectsContainer, filterKey);
+  });
+
+  function setupImageFilter(imageEntries, parentElement, datasetFilter) {
+    // Populate options with all unique values of data among the images list
+    const options = [];
+    imageEntries.forEach(image => {
+      const data = image.dataset[datasetFilter];
+      if (!options.includes(data)) {
+        options.push(data);
+      }
+    });
+
+    // And then attach them to the DOM
+    const selectId = `${datasetFilter}-filter`;
+    const select = document.getElementById(selectId);
+    if (!select) {
+      console.warn(
+        `Element with id '${selectId}' not found.`
+        + " Skipping filter setup."
+        + " Did you forget to add the 'select' element to the HTML?"
+      );
+
+      return;
+    }
+
+    const allOption = document.createElement("option");
+    allOption.value = "";
+    allOption.textContent = "All";
+    select.appendChild(allOption);
+
+    options.forEach(optionValue => {
+      const option = document.createElement("option");
+      option.value = optionValue;
+      option.textContent = optionValue;
+      select.appendChild(option);
+    });
+
+    // Set up filtering
+    select.addEventListener("change", ({ currentTarget }) => {
+      filters[datasetFilter] = currentTarget.value;
+      filterImages(imageEntries);
+    });
+  }
+
+  function filterImages(imageEntries) {
+    imageEntries.forEach(image => {
+
+      // Only show the image if we match all the filters
+      var hidden = false;
+      Object.keys(filters).forEach(filterKey => {
+        if (hidden) {
+          return;
+        }
+
+        const filterValue = filters[filterKey];
+        const imageValue = image.dataset[filterKey];
+        if (filterValue !== "" && imageValue !== filterValue) {
+          hidden = true;
+        }
+      });
+
+      image.hidden = hidden;
+    });
+  }
 }
 
 function renderImages(data) {
@@ -35,18 +112,22 @@ function renderImages(data) {
       const specificOs = platform.osVersion;
 
       var osFamily = "";
-      if (specificOs.includes("azure")) {
-        osFamily = "Azure Linux";
-      } else if (specificOs.includes("noble") || specificOs.includes("jammy")) {
+      if (specificOs.includes("noble") || specificOs.includes("jammy")) {
         osFamily = "Ubuntu";
       } else if (specificOs.includes("trixie") || specificOs.includes("bookworm")) {
         osFamily = "Debian";
       } else if (specificOs.includes("alpine")) {
         osFamily = "Alpine";
+      } else if (specificOs.includes("azure")) {
+        osFamily = "Azure Linux";
+      } else if (specificOs.includes("cbl")) {
+        osFamily = "CBL Mariner";
       } else if (specificOs.includes("servercore")) {
         osFamily = "Windows Server Core";
       } else if (specificOs.includes("nano")) {
         osFamily = "Windows Nano Server";
+      } else {
+        osFamily = "Other";
       }
 
       const architectures = image.platforms.map(p => p.architecture);
@@ -54,25 +135,25 @@ function renderImages(data) {
       const isComposite = platform.simpleTags.some(tag => tag.includes("composite"));
 
       // Debian and Ubuntu non-distroless images include globalization libs by default
-      const supportsGlobalization = platform.simpleTags.some(tag => tag.includes("extra"))
+      const globalization = platform.simpleTags.some(tag => tag.includes("extra"))
         || (!isDistroless && (osFamily === "Ubuntu" || osFamily === "Debian"));
 
       const imageFragment = createImageFragment(repo.repo, image, imageTemplate, platformTemplate);
       const imageEntry = imageFragment.getElementById("image-entry");
 
+      imageEntry.dataset.repo = repo.repo;
       imageEntry.dataset.os = specificOs;
-      imageEntry.dataset.osType = osType;
-      imageEntry.dataset.osFamily = osFamily;
+      imageEntry.dataset.ostype = osType;
+      imageEntry.dataset.osfamily = osFamily;
       imageEntry.dataset.architectures = architectures;
-      imageEntry.dataset.isDistroless = isDistroless;
-      imageEntry.dataset.supportsGlobalization = supportsGlobalization;
-      imageEntry.dataset.isComposite = isComposite;
+      imageEntry.dataset.isdistroless = isDistroless;
+      imageEntry.dataset.globalization = globalization;
+      imageEntry.dataset.iscomposite = isComposite;
 
       images.push(imageFragment);
     });
   });
 
-  console.log(images);
   return images;
 }
 

@@ -14,9 +14,7 @@
   <!-- Fonts (Open Sans, Space Grotesk, Space Mono) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital@0;1&family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
   <meta name="color-scheme" content="light dark">
   <script type="module" src="app.js" defer></script>
@@ -26,7 +24,26 @@
   <div class="container">
     <h1>Explore .NET container images</h1>
 
-    <ul id="images-root">
+    <div id="filter-selects" class="filters-container">
+      <div class="filter-container">
+        <label for="repo-filter">Repo</label>
+        <select name="repo" id="repo-filter"></select>
+      </div>
+      <div class="filter-container">
+        <label for="osfamily-filter">Operating system</label>
+        <select name="os" id="osfamily-filter"></select>
+      </div>
+      <div class="filter-container">
+        <label for="isdistroless-filter">Distroless</label>
+        <select name="distroless" id="isdistroless-filter"></select>
+      </div>
+      <div class="filter-container">
+        <label for="globalization-filter">Globalization</label>
+        <select name="globalization" id="globalization-filter"></select>
+      </div>
+    </div>
+
+    <ul id="images-list">
     </ul>
     <div id="platform">
     </div>
