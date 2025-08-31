@@ -64,6 +64,8 @@ h1 {
   font-optical-sizing: auto;
   font-weight: 700;
   font-style: normal;
+  line-height: 1;
+  padding: 3rem 0;
 
     /* Define the gradient as a background image */
   background-image: linear-gradient(to right, var(--purple-primary), var(--magenta-primary));
