@@ -11,26 +11,36 @@ async function main() {
     return;
   }
 
-  const data = await getImageInfo();
+  var url = new URL(window.location);
+  const nonFilterParams = ["ref", "file"];
+  const ref = url.searchParams.get("ref") ?? "refs/heads/main";
+  const file = url.searchParams.get("file") ?? "dotnet-dotnet-docker-main";
 
+  // Fetch image data from GitHub
+  const data = await getImageInfo(ref, file);
+
+  // Render the data to the DOM
   const images = renderImages(data);
   images.forEach(documentFragment => imagesList.appendChild(documentFragment));
 
+  // From here, we're going to do any the filtering based purely on the DOM.
+  // Get all the rendered image entries back from the DOM.
   const imageEntries = imagesList.querySelectorAll("#image-entry");
-  const selectsContainer = document.getElementById("filter-selects");
 
-  const filters = {
-    repo: "",
-    osfamily: "",
-    isdistroless: "",
-    globalization: "",
-  }
+  setupImageFilter(imageEntries, "repo");
+  setupImageFilter(imageEntries, "osfamily");
+  setupImageFilter(imageEntries, "isdistroless");
+  setupImageFilter(imageEntries, "globalization");
 
-  Object.keys(filters).forEach(filterKey => {
-    setupImageFilter(imageEntries, selectsContainer, filterKey);
+  window.addEventListener("popstate", _ => {
+    url = new URL(document.location);
+    filterImages(imageEntries);
+    updateSelectValues();
   });
 
-  function setupImageFilter(imageEntries, parentElement, datasetFilter) {
+  filterImages(imageEntries);
+
+  function setupImageFilter(imageEntries, datasetFilter) {
     // Populate options with all unique values of data among the images list
     const options = [];
     imageEntries.forEach(image => {
@@ -65,10 +75,25 @@ async function main() {
       select.appendChild(option);
     });
 
-    // Set up filtering
+    // Load the selector with the initial filter value, if it was passed in via the URL
+    const urlParam = url.searchParams.get(datasetFilter);
+    if (urlParam && options.includes(urlParam)) {
+      select.value = urlParam;
+    }
+
+    // When we change one of the selectors, we need to update the URL's search
+    // params, filter the images, and then update the browser's URL
     select.addEventListener("change", ({ currentTarget }) => {
-      filters[datasetFilter] = currentTarget.value;
+
+      // We don't want to show empty params in the URL
+      if (currentTarget.value !== "") {
+        url.searchParams.set(datasetFilter, currentTarget.value);
+      } else {
+        url.searchParams.delete(datasetFilter);
+      }
+
       filterImages(imageEntries);
+      window.history.pushState({}, "", url);
     });
   }
 
@@ -77,20 +102,34 @@ async function main() {
 
       // Only show the image if we match all the filters
       var hidden = false;
-      Object.keys(filters).forEach(filterKey => {
-        if (hidden) {
-          return;
-        }
+      url.searchParams.keys()
+        .filter(key => !nonFilterParams.includes(key))
+        .forEach(filterKey => {
+          if (hidden) {
+            return;
+          }
 
-        const filterValue = filters[filterKey];
-        const imageValue = image.dataset[filterKey];
-        if (filterValue !== "" && imageValue !== filterValue) {
-          hidden = true;
-        }
-      });
+          const filterValue = url.searchParams.get(filterKey);
+          const imageValue = image.dataset[filterKey];
+          if (filterValue !== "" && imageValue !== filterValue) {
+            hidden = true;
+          }
+        });
 
       image.hidden = hidden;
     });
+  }
+
+  function updateSelectValues() {
+    url.searchParams.keys()
+      .filter(key => !nonFilterParams.includes(key))
+      .forEach(filterKey => {
+        const select = document.getElementById(`${filterKey}-filter`);
+        const value = url.searchParams.get(filterKey);
+        if (value && select) {
+          select.value = value;
+        }
+      });
   }
 }
 
@@ -259,8 +298,8 @@ function formatDate(dateStr) {
   }
 }
 
-async function getImageInfo() {
-  const url = "https://raw.githubusercontent.com/dotnet/versions/refs/heads/main/build-info/docker/image-info.dotnet-dotnet-docker-main.json";
+async function getImageInfo(ref, file) {
+  const url = `https://raw.githubusercontent.com/dotnet/versions/${ref}/build-info/docker/image-info.${file}.json`;
   const response = await fetch(url);
   return await response.json();
 }
