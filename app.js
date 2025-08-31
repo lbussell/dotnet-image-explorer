@@ -28,37 +28,6 @@ function renderImages(data) {
 }
 
 /**
- * Create a DOM fragment for a single platform variant.
- * @param {object} platform
- * @param {HTMLTemplateElement} platformTemplate
- * @returns {DocumentFragment}
- */
-function createPlatformElement(platform, platformTemplate) {
-  const fragment = platformTemplate.content.cloneNode(true);
-  fragment.querySelector("#platform-arch").textContent = platform.architecture;
-  fragment.querySelector("#platform-total-size").textContent = formatBytes(sumLayerSizes(platform.layers));
-
-  const imageRef = fragment.querySelector("#image-ref");
-  imageRef.textContent = getShaPart(platform.digest);
-  imageRef.hidden = false;
-
-  const baseImage = fragment.querySelector("#platform-base-digest");
-  baseImage.textContent = platform.baseImageDigest;
-  baseImage.hidden = false;
-
-  const created = fragment.querySelector("#platform-created");
-  created.textContent = formatDate(platform.created);
-
-  const dockerfileLink = fragment.querySelector("#platform-dockerfile");
-  dockerfileLink.href = platform.commitUrl || "#";
-
-  fragment.querySelector("#platform-tags").innerHTML =
-    platform.simpleTags.map(wrapInCode).join(" ");
-
-  return fragment;
-}
-
-/**
  * Create a DOM fragment for a single image including all its platforms.
  * @param {string} repoName
  * @param {object} image
@@ -93,6 +62,37 @@ function createImageElement(repoName, image, imageTemplate, platformTemplate) {
       imageRef.textContent = `mcr.microsoft.com/${repoName}:${sharedTags[0]}`;
       imageRef.hidden = false;
     }
+  }
+
+  /**
+   * Create a DOM fragment for a single platform variant.
+   * @param {object} platform
+   * @param {HTMLTemplateElement} platformTemplate
+   * @returns {DocumentFragment}
+   */
+  function createPlatformElement(platform, platformTemplate) {
+    const fragment = platformTemplate.content.cloneNode(true);
+    fragment.querySelector("#platform-arch").textContent = platform.architecture;
+    fragment.querySelector("#platform-total-size").textContent = formatBytes(sumLayerSizes(platform.layers));
+
+    const imageRef = fragment.querySelector("#image-ref");
+    imageRef.textContent = getShaPart(platform.digest);
+    imageRef.hidden = false;
+
+    const baseImage = fragment.querySelector("#platform-base-digest");
+    baseImage.textContent = platform.baseImageDigest;
+    baseImage.hidden = false;
+
+    const created = fragment.querySelector("#platform-created");
+    created.textContent = formatDate(platform.created);
+
+    const dockerfileLink = fragment.querySelector("#platform-dockerfile");
+    dockerfileLink.href = platform.commitUrl || "#";
+
+    fragment.querySelector("#platform-tags").innerHTML =
+      platform.simpleTags.map(wrapInCode).join(" ");
+
+    return fragment;
   }
 
   const platformsUl = fragment.querySelector("#platforms");
