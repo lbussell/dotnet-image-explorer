@@ -5,26 +5,75 @@
 window.onload = main;
 
 async function main() {
-  const data = await getImageInfo();
-  const fragments = renderImages(data);
+
   const imagesRoot = document.getElementById("images-root");
-  if (imagesRoot) {
-    fragments.forEach(f => imagesRoot.appendChild(f));
+  if (!imagesRoot) {
+    return;
   }
+
+  const data = await getImageInfo();
+
+  const images = renderImages(data);
+  images.forEach(image => imagesRoot.appendChild(image.fragment));
 }
 
 function renderImages(data) {
+
   const imageTemplate = document.getElementById("image-template");
   const platformTemplate = document.getElementById("platform-template");
-  if (!imageTemplate || !platformTemplate) return [];
-  const fragments = [];
+  if (!imageTemplate || !platformTemplate) {
+    return [];
+  }
+
+  const images = [];
+
   data.repos.forEach(repo => {
     repo.images.forEach(image => {
-      const imageFragment = createImageElement(repo.repo, image, imageTemplate, platformTemplate);
-      fragments.push(imageFragment);
+
+      const platform = image.platforms[0];
+      const osType = platform.osType;
+      const specificOs = platform.osVersion;
+
+      var osFamily = "";
+      if (specificOs.includes("azure")) {
+        osFamily = "Azure Linux";
+      } else if (specificOs.includes("noble") || specificOs.includes("jammy")) {
+        osFamily = "Ubuntu";
+      } else if (specificOs.includes("trixie") || specificOs.includes("bookworm")) {
+        osFamily = "Debian";
+      } else if (specificOs.includes("alpine")) {
+        osFamily = "Alpine";
+      } else if (specificOs.includes("servercore")) {
+        osFamily = "Windows Server Core";
+      } else if (specificOs.includes("nano")) {
+        osFamily = "Windows Nano Server";
+      }
+
+      const architectures = image.platforms.map(p => p.architecture);
+      const isDistroless = specificOs.includes("distroless") || specificOs.includes("chisel");
+      const isComposite = platform.simpleTags.some(tag => tag.includes("composite"));
+
+      // Debian and Ubuntu non-distroless images include globalization libs by default
+      const supportsGlobalization = platform.simpleTags.some(tag => tag.includes("extra"))
+        || (!isDistroless && (osFamily === "Ubuntu" || osFamily === "Debian"));
+
+      const imageFragment = createImageFragment(repo.repo, image, imageTemplate, platformTemplate);
+
+      images.push({
+        fragment: imageFragment,
+        os: specificOs,
+        osType: osType,
+        osFamily: osFamily,
+        architectures: architectures,
+        isDistroless: isDistroless,
+        supportsGlobalization: supportsGlobalization,
+        isComposite: isComposite
+      });
     });
   });
-  return fragments;
+
+  console.log(images);
+  return images;
 }
 
 /**
@@ -35,7 +84,7 @@ function renderImages(data) {
  * @param {HTMLTemplateElement} platformTemplate
  * @returns {DocumentFragment}
  */
-function createImageElement(repoName, image, imageTemplate, platformTemplate) {
+function createImageFragment(repoName, image, imageTemplate, platformTemplate) {
   const fragment = imageTemplate.content.cloneNode(true);
   fragment.querySelectorAll("#repo-name").forEach(el => el.textContent = repoName);
   fragment.querySelector("#image-version").textContent = image.productVersion;
