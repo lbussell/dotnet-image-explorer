@@ -14,7 +14,7 @@ async function main() {
   const data = await getImageInfo();
 
   const images = renderImages(data);
-  images.forEach(image => imagesRoot.appendChild(image.fragment));
+  images.forEach(documentFragment => imagesRoot.appendChild(documentFragment));
 }
 
 function renderImages(data) {
@@ -58,17 +58,17 @@ function renderImages(data) {
         || (!isDistroless && (osFamily === "Ubuntu" || osFamily === "Debian"));
 
       const imageFragment = createImageFragment(repo.repo, image, imageTemplate, platformTemplate);
+      const imageEntry = imageFragment.getElementById("image-entry");
 
-      images.push({
-        fragment: imageFragment,
-        os: specificOs,
-        osType: osType,
-        osFamily: osFamily,
-        architectures: architectures,
-        isDistroless: isDistroless,
-        supportsGlobalization: supportsGlobalization,
-        isComposite: isComposite
-      });
+      imageEntry.dataset.os = specificOs;
+      imageEntry.dataset.osType = osType;
+      imageEntry.dataset.osFamily = osFamily;
+      imageEntry.dataset.architectures = architectures;
+      imageEntry.dataset.isDistroless = isDistroless;
+      imageEntry.dataset.supportsGlobalization = supportsGlobalization;
+      imageEntry.dataset.isComposite = isComposite;
+
+      images.push(imageFragment);
     });
   });
 

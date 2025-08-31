@@ -18,7 +18,6 @@
     href="https://fonts.googleapis.com/css2?family=Open+Sans:ital@0;1&family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&display=swap"
     rel="stylesheet">
 
-  <link rel="icon" href="favicon.png" />
   <meta name="color-scheme" content="light dark">
   <script type="module" src="app.js" defer></script>
 </head>
@@ -33,7 +32,7 @@
     </div>
 
     <template id="image-template">
-      <li class="image card">
+      <li id="image-entry" class="image card">
 
         <div class="image-card-header">
           <h4>
@@ -62,7 +61,6 @@
       <li class="platform image-container">
 
         <span id="platform-arch" class="tag tag-purple"></span>
-
         <span id="platform-total-size"></span>
 
         <a id="platform-dockerfile" target="_blank" rel="noopener" class="button button-purple">Open Dockerfile</a>
@@ -78,19 +76,8 @@
           <div class="code-bg"><code id="platform-base-digest" hidden></code></div>
 
           <span class="label">Created <time id="platform-created" class="time"></time></span>
-
         </div>
       </li>
-    </template>
-
-    <template id="summary-template">
-      <div class="summary-block">
-        <h1>.NET image explorer</h1>
-        <p>Total repos: <strong id="summary-repo-count"></strong></p>
-        <p>Total images: <strong id="summary-image-count"></strong></p>
-        <p>Total platforms: <strong id="summary-platform-count"></strong></p>
-        <p>Total compressed size (layers summed, dedupe per layer digest): <strong id="summary-total-size"></strong></p>
-      </div>
     </template>
   </div>
 
