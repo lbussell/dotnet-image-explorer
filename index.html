@@ -7,53 +7,79 @@
   <title>.NET image explorer</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="" />
+
   <link rel="stylesheet" type="text/css" href="style.css" />
   <link rel="stylesheet" type="text/css" href="reset.css" />
+
+  <!-- Fonts (Open Sans, Space Grotesk, Space Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital@0;1&family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+
   <link rel="icon" href="favicon.png" />
   <meta name="color-scheme" content="light dark">
   <script type="module" src="app.js" defer></script>
 </head>
 
 <body>
-
   <div class="container">
+    <h1>.NET images</h1>
+
     <ul id="images-root">
     </ul>
     <div id="platform">
     </div>
 
     <template id="image-template">
-      <li class="image">
-          <strong id="repo-name"></strong> : <span id="image-version"></span>
-          (<span id="image-platform-count"></span> platforms)
-          <div class="image-meta">
-            <div>Created: <time id="image-created"></time></div>
-            <div>Shared tags: <span id="image-shared-tags"></span></div>
-          </div>
-          <ul id="platforms"></ul>
+      <li class="image card">
+
+        <div class="image-card-header">
+          <h4>
+            <span id="repo-name"></span>
+            <span id="image-version" class="tag tag-purple"></span>
+            <span id="image-os" class="tag tag-blue" hidden></span>
+          </h4>
+        </div>
+
+        <div id="manifest-list-info" class="image-container" hidden>
+
+          <span class="label">Image</span>
+          <div class="code-bg"><code id="image-ref" hidden></code></div>
+
+          <span class="label">Multi-platform tags</span>
+          <ul class="tag-list"><li><span id="image-shared-tags"></span></li></ul>
+
+          <span class="label">Last updated <time id="image-created" class="time"></time></span>
+        </div>
+
+        <ul id="platforms"></ul>
       </li>
     </template>
 
     <template id="platform-template">
-      <li class="platform">
-        <details>
-          <summary>
-            <span id="platform-arch"></span>
-            - <span id="platform-os"></span>
-            (<span id="platform-layer-count"></span> layers, <span id="platform-total-size"></span>)
-          </summary>
-          <div class="platform-meta">
-            <div>Digest: <code id="platform-digest"></code></div>
-            <div>Base image digest: <code id="platform-base-digest"></code></div>
-            <div>Created: <time id="platform-created"></time></div>
-            <div>Dockerfile: <a id="platform-dockerfile" target="_blank" rel="noopener"></a></div>
-            <div>Tags: <span id="platform-tags"></span></div>
-            <details class="layers-details">
-              <summary>Layers</summary>
-              <ol id="layers"></ol>
-            </details>
-          </div>
-        </details>
+      <li class="platform image-container">
+
+        <span id="platform-arch" class="tag tag-purple"></span>
+
+        <span id="platform-total-size"></span>
+
+        <a id="platform-dockerfile" target="_blank" rel="noopener" class="button button-purple">Open Dockerfile</a>
+
+        <div class="platform-meta">
+          <span class="label">Tags</span>
+          <ul class="tag-list"><li><span id="platform-tags"></span></li></ul>
+
+          <span class="label">Digest</span>
+          <div class="code-bg"><code id="image-ref" hidden></code></div>
+
+          <span class="label">Base image</span>
+          <div class="code-bg"><code id="platform-base-digest" hidden></code></div>
+
+          <span class="label">Created <time id="platform-created" class="time"></time></span>
+
+        </div>
       </li>
     </template>
 

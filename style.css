@@ -1,4 +1,228 @@
+:root {
+  --purple-shade: #311a7f;
+  --purple-primary: #512bd4;
+  --purple-tint: #eeeafb;
+  --magenta-shade: #800066;
+  --magenta-primary: #d600aa;
+  --magenta-tint: #f7ccee;
+  --magenta-tint-45: #fbe5f6;
+  --blue-shade: #042b66;
+  --blue-primary: #0b6cff;
+  --blue-tint: #cee2ff;
+  --blue-tint-45: #e7f0ff;
+  --flamingo-shade: #74222B;
+  --flamingo-primary: #f65163;
+  --flamingo-tint: #fddce0;
+  --cyan-shade: #18747d;
+  --cyan-primary: #28c2d1;
+  --cyan-tint: #e9f9fa;
+  --yellow-shade: #70511d;
+  --yellow-primary: #f7b548;
+  --yellow-tint: #fdf0da;
+  --code-light: #00467e;
+  --code-dark: #b6d3ff;
+  --code-lines: #7a7a7a;
+
+  --background: #F4F6F9;
+  --background-shade: #dcdde0;
+
+  /* https://www.joshwcomeau.com/shadow-palette/ */
+  --shadow-color: 30deg 3% 60%;
+  --shadow-elevation-low:
+    0.1px 0.2px 0.3px hsl(var(--shadow-color) / 0.34),
+    0.2px 0.4px 0.5px -1.2px hsl(var(--shadow-color) / 0.34),
+    0.4px 0.8px 1px -2.5px hsl(var(--shadow-color) / 0.34);
+  --shadow-elevation-medium:
+    0.1px 0.2px 0.3px hsl(var(--shadow-color) / 0.36),
+    0.4px 0.7px 0.9px -0.8px hsl(var(--shadow-color) / 0.36),
+    0.9px 1.7px 2.2px -1.7px hsl(var(--shadow-color) / 0.36),
+    2.2px 4.2px 5.3px -2.5px hsl(var(--shadow-color) / 0.36);
+  --shadow-elevation-high:
+    0.1px 0.2px 0.3px hsl(var(--shadow-color) / 0.34),
+    0.6px 1.2px 1.5px -0.4px hsl(var(--shadow-color) / 0.34),
+    1.2px 2.3px 2.9px -0.7px hsl(var(--shadow-color) / 0.34),
+    1.9px 3.8px 4.8px -1.1px hsl(var(--shadow-color) / 0.34),
+    3.1px 6px 7.6px -1.4px hsl(var(--shadow-color) / 0.34),
+    4.8px 9.5px 12px -1.8px hsl(var(--shadow-color) / 0.34),
+    7.3px 14.4px 18.2px -2.1px hsl(var(--shadow-color) / 0.34),
+    10.8px 21.2px 26.8px -2.5px hsl(var(--shadow-color) / 0.34);
+}
+
+body {
+  background-color: var(--background);
+
+  font-family: "Open Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-size: 16px;
+  font-weight: 400; /* Regular: 400, Bold: 700 */
+  font-style: normal;
+}
+
+h1 {
+  font-size: 84px;
+  font-family: "Space Grotesk", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+
+    /* Define the gradient as a background image */
+  background-image: linear-gradient(to right, var(--purple-primary), var(--magenta-primary));
+  /* Clip the background to the text shape */
+  background-clip: text;
+  /* For older WebKit browsers (like Safari) */
+  -webkit-background-clip: text;
+  /* Make the text color transparent to reveal the background */
+  color: transparent;
+  /* For older WebKit browsers */
+  -webkit-text-fill-color: transparent;
+}
+
+h2 {
+  font-size: 52px;
+  font-family: "Space Grotesk", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+h3 {
+  font-size: 32px;
+  font-family: "Open Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}
+
+h4 {
+  font-size: 20px;
+  font-family: "Space Grotesk", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+a {
+  color: var(--purple-shade);
+}
+
+code {
+  font-family: "Space Mono", monospace;
+  font-weight: 400;
+  font-style: normal;
+  /* color: var(--code-light); */
+}
+
+#images-root {
+  list-style: none;
+}
+
+#platforms {
+  list-style: none;
+}
+
+#platform-dockerfile {
+  float: right;
+}
+
+.navbar {
+  background-color: white;
+  box-shadow: var(--shadow-elevation-medium);
+  margin-bottom: 1rem;
+}
+
 .container {
-  width: min(100% - 3rem, var(--container-max, 60ch));
+  width: min(100% - 3rem, var(--container-max, 100ch));
   margin-inline: auto;
+}
+
+ul {
+  padding: 0;
+}
+
+li {
+  list-style: none;
+}
+
+.card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow-elevation-medium);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.tag {
+  font-weight: 400;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.tag-purple {
+  background-color: var(--purple-tint);
+  color: var(--purple-shade);
+}
+
+.tag-blue {
+  background-color: var(--blue-tint-45);
+  color: var(--blue-shade);
+}
+
+.tag-magenta {
+  background-color: var(--magenta-tint-45);
+  color: var(--magenta-shade);
+}
+
+.tag-flamingo {
+  background-color: var(--flamingo-tint);
+  color: var(--flamingo-shade);
+}
+
+.button {
+  text-decoration: none;
+  border: 1px solid var(--purple-tint);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  transition-duration: 0.1s;
+
+  &:hover {
+    background-color: var(--purple-tint);
+    border-color: var(--purple-primary);
+    /* color: white; */
+  }
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--code-lines);
+  padding-left: 0.25rem;
+}
+
+.code-bg {
+  /* background-color: #f5f4f3; */
+  background-color: var(--background);
+  border: 1px solid var(--background-shade);
+  border-radius: 0.5rem;
+  padding: 0rem 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.image-container {
+  border: 1px solid var(--background-shade);
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.image-container > * {
+  padding-left: 0.5rem;
+}
+
+.image-container > .tag-list {
+  padding-left: 0rem;
+  margin-bottom: 0.25rem;
+}
+
+.time {
+  font-weight: 700;
 }

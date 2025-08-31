@@ -34,25 +34,28 @@ function renderImages(data) {
  * @returns {DocumentFragment}
  */
 function createPlatformElement(platform, platformTemplate) {
-  const platformFragment = platformTemplate.content.cloneNode(true);
-  platformFragment.querySelector("#platform-arch").textContent = platform.architecture;
-  platformFragment.querySelector("#platform-os").textContent = platform.osVersion || platform.osType;
-  platformFragment.querySelector("#platform-layer-count").textContent = platform.layers?.length || 0;
-  platformFragment.querySelector("#platform-total-size").textContent = formatBytes(sumLayerSizes(platform.layers));
-  platformFragment.querySelector("#platform-digest").textContent = platform.digest;
-  platformFragment.querySelector("#platform-base-digest").textContent = platform.baseImageDigest || "";
-  platformFragment.querySelector("#platform-created").textContent = formatDate(platform.created);
-  const dockerfileLink = platformFragment.querySelector("#platform-dockerfile");
-  dockerfileLink.textContent = platform.dockerfile;
+  const fragment = platformTemplate.content.cloneNode(true);
+  fragment.querySelector("#platform-arch").textContent = platform.architecture;
+  fragment.querySelector("#platform-total-size").textContent = formatBytes(sumLayerSizes(platform.layers));
+
+  const imageRef = fragment.querySelector("#image-ref");
+  imageRef.textContent = getShaPart(platform.digest);
+  imageRef.hidden = false;
+
+  const baseImage = fragment.querySelector("#platform-base-digest");
+  baseImage.textContent = platform.baseImageDigest;
+  baseImage.hidden = false;
+
+  const created = fragment.querySelector("#platform-created");
+  created.textContent = formatDate(platform.created);
+
+  const dockerfileLink = fragment.querySelector("#platform-dockerfile");
   dockerfileLink.href = platform.commitUrl || "#";
-  platformFragment.querySelector("#platform-tags").textContent = (platform.simpleTags || []).join(", ");
-  const layersOl = platformFragment.querySelector("#layers");
-  (platform.layers || []).forEach(layer => {
-    const li = document.createElement("li");
-    li.innerHTML = `<code>${layer.digest}</code> - ${formatBytes(layer.size)}`;
-    layersOl.appendChild(li);
-  });
-  return platformFragment;
+
+  fragment.querySelector("#platform-tags").innerHTML =
+    platform.simpleTags.map(wrapInCode).join(" ");
+
+  return fragment;
 }
 
 /**
@@ -64,18 +67,40 @@ function createPlatformElement(platform, platformTemplate) {
  * @returns {DocumentFragment}
  */
 function createImageElement(repoName, image, imageTemplate, platformTemplate) {
-  const imageFragment = imageTemplate.content.cloneNode(true);
-  imageFragment.querySelectorAll("#repo-name").forEach(el => el.textContent = repoName);
-  imageFragment.querySelector("#image-version").textContent = image.productVersion;
-  imageFragment.querySelector("#image-platform-count").textContent = image.platforms?.length || 0;
-  imageFragment.querySelector("#image-created").textContent = formatDate(image.manifest?.created);
-  imageFragment.querySelector("#image-shared-tags").textContent = (image.manifest?.sharedTags || []).join(", ");
-  const platformsUl = imageFragment.querySelector("#platforms");
+  const fragment = imageTemplate.content.cloneNode(true);
+  fragment.querySelectorAll("#repo-name").forEach(el => el.textContent = repoName);
+  fragment.querySelector("#image-version").textContent = image.productVersion;
+
+  const created = fragment.querySelector("#image-created");
+  created.textContent = formatDate(image.manifest?.created);
+
+  const imageOs = fragment.querySelector("#image-os")
+  imageOs.textContent = image.platforms[0].osVersion || image.platforms[0].osType;
+  imageOs.hidden = false;
+
+  const manifest = image.manifest;
+  if (manifest) {
+    fragment.querySelector("#manifest-list-info").hidden = false;
+
+    const sharedTags = image.manifest?.sharedTags;
+    if (sharedTags) {
+      sharedTags
+        .sort((a, b) => b.length - a.length);
+      fragment.querySelector("#image-shared-tags").innerHTML =
+        sharedTags.map(wrapInCode).join(" ");
+
+      const imageRef = fragment.querySelector("#image-ref");
+      imageRef.textContent = `mcr.microsoft.com/${repoName}:${sharedTags[0]}`;
+      imageRef.hidden = false;
+    }
+  }
+
+  const platformsUl = fragment.querySelector("#platforms");
   (image.platforms || []).forEach(platform => {
     const platformEl = createPlatformElement(platform, platformTemplate);
     platformsUl.appendChild(platformEl);
   });
-  return imageFragment;
+  return fragment;
 }
 
 function sumLayerSizes(layers = []) {
@@ -105,7 +130,16 @@ function formatDate(dateStr) {
 }
 
 async function getImageInfo() {
-  const url = "image-info.dotnet-dotnet-docker-main.json"
+  const url = "https://raw.githubusercontent.com/dotnet/versions/refs/heads/main/build-info/docker/image-info.dotnet-dotnet-docker-main.json";
   const response = await fetch(url);
   return await response.json();
+}
+
+function getShaPart(fullImageRef) {
+  const parts = fullImageRef.split("@");
+  return parts.length > 1 ? parts[1] : "";
+}
+
+function wrapInCode(text) {
+  return `<code class="code-bg">${text}</code>`;
 }
