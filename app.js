@@ -4,7 +4,9 @@
 
 window.onload = main;
 
-const filterParams = ["repo", "osfamily", "isdistroless", "globalization"];
+// Add new filter keys here. Each key must have a corresponding select element
+// (<select id="{key}-filter">) in the HTML.
+const filterParams = ["repo", "version", "osfamily", "isdistroless", "globalization"];
 const nonFilterParams = ["ref", "file"];
 
 async function main() {
@@ -95,6 +97,7 @@ function renderImages(data) {
       imageEntry.dataset.isdistroless = isDistroless;
       imageEntry.dataset.globalization = globalization;
       imageEntry.dataset.iscomposite = isComposite;
+      imageEntry.dataset.version = getMajorMinorVersion(image.productVersion);
 
       images.push(imageFragment);
     });
@@ -224,6 +227,12 @@ function getUniqueDatasetValues(elementsWithData, key) {
   const uniqueValues = [];
   elementsWithData.forEach(element => {
     const data = element.dataset[key];
+
+    // Skip empty / undefined values so we don't duplicate the "All" option.
+    if ((data === undefined || data === "")) {
+      return;
+    }
+
     if (!uniqueValues.includes(data)) {
       uniqueValues.push(data);
     }
@@ -322,4 +331,18 @@ function getFilterSelectElement(filterKey) {
   }
 
   return select;
+}
+
+function getMajorMinorVersion(version) {
+  if (!version) {
+    return "";
+  }
+
+  // Extract the first two numeric portions (major.minor) ignoring patch / prerelease.
+  const match = version.match(/^(\d+)\.(\d+)/);
+  if (match) {
+    return `${match[1]}.${match[2]}`;
+  }
+
+  return version; // Fallback: return as-is if it doesn't match expected pattern.
 }
