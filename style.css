@@ -22,12 +22,14 @@
   --code-light: #00467e;
   --code-dark: #b6d3ff;
 
+  --fg: rgba(1, 1, 1, 0.9);
+
   --code-lines: #6e6e6e;
   --text-dim: rgba(0, 0, 0, 0.6);
   --dim-highlight: rgba(0, 0, 0, 0.05);
   --dim-highlight-text: rgba(0, 0, 0, 0.65);
 
-  --background: #F4F6F9;
+  --bg: #F4F6F9;
   --background-shade: #dcdde0;
 
   /* https://www.joshwcomeau.com/shadow-palette/ */
@@ -55,7 +57,8 @@
 }
 
 body {
-  background-color: var(--background);
+  color: var(--fg);
+  background-color: var(--bg);
 
   font-family: "Open Sans", sans-serif;
   font-optical-sizing: auto;
@@ -117,7 +120,6 @@ code {
   font-family: "Space Mono", monospace;
   font-weight: 400;
   font-style: normal;
-  /* color: var(--code-light); */
 }
 
 #images-list {
@@ -216,7 +218,7 @@ li {
 
 .code-bg {
   /* background-color: #f5f4f3; */
-  background-color: var(--background);
+  background-color: var(--bg);
   border: 1px solid var(--background-shade);
   border-radius: 0.5rem;
   padding: 0rem 0.5rem;
@@ -245,6 +247,7 @@ li {
 
 .filters-container {
   display: flex;
+  flex-wrap: wrap;
   margin-bottom: 1rem;
 }
 

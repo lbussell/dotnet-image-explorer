@@ -4,19 +4,22 @@
 
 window.onload = main;
 
+// url is mutable because we replace it whenever we push or pop state from the
+// browser history.
+var url = new URL(window.location);
+
 // Add new filter keys here. Each key must have a corresponding select element
 // (<select id="{key}-filter">) in the HTML.
-const filterParams = ["repo", "version", "osfamily", "isdistroless", "globalization"];
-const nonFilterParams = ["ref", "file"];
+const imageFilters = ["repo", "version", "osfamily", "isdistroless", "globalization"];
+const platformFilters = ["arch"];
+const allFilters = [...imageFilters, ...platformFilters];
 
 async function main() {
-
   const imagesList = document.getElementById("images-list");
   if (!imagesList) {
     return;
   }
 
-  var url = new URL(window.location);
   const ref = url.searchParams.get("ref") ?? "refs/heads/main";
   const file = url.searchParams.get("file") ?? "dotnet-dotnet-docker-main";
 
@@ -30,16 +33,31 @@ async function main() {
   // From here, we're going to do any the filtering based purely on the DOM.
   // Get all the rendered image entries back from the DOM.
   const imageEntries = imagesList.querySelectorAll("#image-entry");
+  const platformEntries = imagesList.querySelectorAll("#platform-entry");
 
-  filterParams.forEach(param => setupImageFilter(imageEntries, param, url));
+  imageFilters.forEach(param => setupFiltering(
+    imageEntries,
+    imageFilters,
+    param,
+    url
+  ));
+
+  platformFilters.forEach(param => setupFiltering(
+    platformEntries,
+    platformFilters,
+    param,
+    url
+  ));
 
   window.addEventListener("popstate", _ => {
     url = new URL(document.location);
-    filterImages(imageEntries, url);
+    filterElements(imageEntries, imageFilters, url);
+    filterElements(platformEntries, platformFilters, url);
     updateSelectValues(url);
   });
 
-  filterImages(imageEntries, url);
+  filterElements(imageEntries, imageFilters, url);
+  filterElements(platformEntries, platformFilters, url);
 }
 
 function renderImages(data) {
@@ -78,7 +96,6 @@ function renderImages(data) {
         osFamily = "Other";
       }
 
-      const architectures = image.platforms.map(p => p.architecture);
       const isDistroless = specificOs.includes("distroless") || specificOs.includes("chisel");
       const isComposite = platform.simpleTags.some(tag => tag.includes("composite"));
 
@@ -93,11 +110,18 @@ function renderImages(data) {
       imageEntry.dataset.os = specificOs;
       imageEntry.dataset.ostype = osType;
       imageEntry.dataset.osfamily = osFamily;
-      imageEntry.dataset.architectures = architectures;
       imageEntry.dataset.isdistroless = isDistroless;
       imageEntry.dataset.globalization = globalization;
       imageEntry.dataset.iscomposite = isComposite;
       imageEntry.dataset.version = getMajorMinorVersion(image.productVersion);
+
+      const platformsContainer = imageFragment.querySelector("#platforms");
+      image.platforms.forEach(platform => {
+        const platformFragment = createPlatformFragment(platform, platformTemplate);
+        const platformEntry = platformFragment.getElementById("platform-entry");
+        platformEntry.dataset.arch = platform.architecture;
+        platformsContainer.appendChild(platformFragment);
+      });
 
       images.push(imageFragment);
     });
@@ -143,42 +167,37 @@ function createImageFragment(repoName, image, imageTemplate, platformTemplate) {
     }
   }
 
-  /**
-   * Create a DOM fragment for a single platform variant.
-   * @param {object} platform
-   * @param {HTMLTemplateElement} platformTemplate
-   * @returns {DocumentFragment}
-   */
-  function createPlatformElement(platform, platformTemplate) {
-    const fragment = platformTemplate.content.cloneNode(true);
-    fragment.querySelector("#platform-arch").textContent = platform.architecture;
-    fragment.querySelector("#platform-total-size").textContent = formatBytes(sumLayerSizes(platform.layers));
+  return fragment;
+}
 
-    const imageRef = fragment.querySelector("#image-ref");
-    imageRef.textContent = getShaPart(platform.digest);
-    imageRef.hidden = false;
+/**
+ * Create a DOM fragment for a single platform variant.
+ * @param {object} platform
+ * @param {HTMLTemplateElement} platformTemplate
+ * @returns {DocumentFragment}
+ */
+function createPlatformFragment(platform, platformTemplate) {
+  const fragment = platformTemplate.content.cloneNode(true);
+  fragment.querySelector("#platform-arch").textContent = platform.architecture;
+  fragment.querySelector("#platform-total-size").textContent = formatBytes(sumLayerSizes(platform.layers));
 
-    const baseImage = fragment.querySelector("#platform-base-digest");
-    baseImage.textContent = platform.baseImageDigest;
-    baseImage.hidden = false;
+  const imageRef = fragment.querySelector("#image-ref");
+  imageRef.textContent = getShaPart(platform.digest);
+  imageRef.hidden = false;
 
-    const created = fragment.querySelector("#platform-created");
-    created.textContent = formatDate(platform.created);
+  const baseImage = fragment.querySelector("#platform-base-digest");
+  baseImage.textContent = platform.baseImageDigest;
+  baseImage.hidden = false;
 
-    const dockerfileLink = fragment.querySelector("#platform-dockerfile");
-    dockerfileLink.href = platform.commitUrl || "#";
+  const created = fragment.querySelector("#platform-created");
+  created.textContent = formatDate(platform.created);
 
-    fragment.querySelector("#platform-tags").innerHTML =
-      platform.simpleTags.map(wrapInCode).join(" ");
+  const dockerfileLink = fragment.querySelector("#platform-dockerfile");
+  dockerfileLink.href = platform.commitUrl || "#";
 
-    return fragment;
-  }
+  fragment.querySelector("#platform-tags").innerHTML =
+    platform.simpleTags.map(wrapInCode).join(" ");
 
-  const platformsUl = fragment.querySelector("#platforms");
-  (image.platforms || []).forEach(platform => {
-    const platformEl = createPlatformElement(platform, platformTemplate);
-    platformsUl.appendChild(platformEl);
-  });
   return fragment;
 }
 
@@ -255,44 +274,44 @@ function populateOptions(selectElement, options) {
   });
 }
 
-function filterImages(imageEntries, url) {
-  imageEntries.forEach(image => {
+function filterElements(elementsWithData, allFilters, url) {
+  elementsWithData.forEach(element => {
     var hidden = false;
 
-    // Only show the image if we match all the filters
-    filterParams.forEach(filterKey => {
+    // Only show the element if it matches all the filters
+    allFilters.forEach(filterKey => {
       if (hidden) {
         return;
       }
 
       const filterValue = url.searchParams.get(filterKey);
-      const imageValue = image.dataset[filterKey];
+      const elementValue = element.dataset[filterKey];
 
       if (
         filterValue !== null
         && filterValue !== ""
-        && imageValue !== filterValue
+        && elementValue !== filterValue
       ) {
         hidden = true;
       }
     });
 
-    image.hidden = hidden;
+    element.hidden = hidden;
   });
 }
 
-function setupImageFilter(imageEntries, datasetFilter, url) {
-  const select = getFilterSelectElement(datasetFilter);
+function setupFiltering(elementsWithData, possibleFilters, thisFilter, url) {
+  const select = getFilterSelectElement(thisFilter);
   if (!select) {
     return;
   }
 
   // Populate options with all unique values of data among the images list
-  const options = getUniqueDatasetValues(imageEntries, datasetFilter);
+  const options = getUniqueDatasetValues(elementsWithData, thisFilter);
   populateOptions(select, options);
 
   // Load the selector with the initial filter value, if it was passed in via the URL
-  const urlParam = url.searchParams.get(datasetFilter);
+  const urlParam = url.searchParams.get(thisFilter);
   if (urlParam && options.includes(urlParam)) {
     select.value = urlParam;
   }
@@ -302,18 +321,18 @@ function setupImageFilter(imageEntries, datasetFilter, url) {
   select.addEventListener("change", ({ currentTarget }) => {
     // We don't want to show empty params in the URL
     if (currentTarget.value !== "") {
-      url.searchParams.set(datasetFilter, currentTarget.value);
+      url.searchParams.set(thisFilter, currentTarget.value);
     } else {
-      url.searchParams.delete(datasetFilter);
+      url.searchParams.delete(thisFilter);
     }
 
-    filterImages(imageEntries, url);
+    filterElements(elementsWithData, possibleFilters, url);
     window.history.pushState({}, "", url);
   });
 }
 
 function updateSelectValues(url) {
-  filterParams.forEach(filterKey => {
+  imageFilters.forEach(filterKey => {
     const select = getFilterSelectElement(filterKey);
     const value = url.searchParams.get(filterKey) ?? "";
     if (select) {

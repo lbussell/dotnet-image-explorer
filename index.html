@@ -38,6 +38,10 @@
         <select name="os" id="osfamily-filter"></select>
       </div>
       <div class="filter-container">
+        <label for="arch-filter">Arch</label>
+        <select name="arch" id="arch-filter"></select>
+      </div>
+      <div class="filter-container">
         <label for="isdistroless-filter">Distroless</label>
         <select name="distroless" id="isdistroless-filter"></select>
       </div>
@@ -79,7 +83,7 @@
     </template>
 
     <template id="platform-template">
-      <li class="platform image-container">
+      <li id="platform-entry" class="platform image-container">
 
         <span id="platform-arch" class="tag tag-purple"></span>
         <span id="platform-total-size"></span>
