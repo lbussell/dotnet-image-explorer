@@ -35,29 +35,35 @@ async function main() {
   const imageEntries = imagesList.querySelectorAll("#image-entry");
   const platformEntries = imagesList.querySelectorAll("#platform-entry");
 
+  // Central function to (re)apply all filters and enforce image/platform relationship.
+  const applyFilters = () => {
+    filterElements(imageEntries, imageFilters, url);
+    filterElements(platformEntries, platformFilters, url);
+    hideImagesWithoutVisiblePlatforms(imageEntries, platformEntries, url);
+  };
+
   imageFilters.forEach(param => setupFiltering(
     imageEntries,
-    imageFilters,
     param,
-    url
+    url,
+    applyFilters
   ));
 
   platformFilters.forEach(param => setupFiltering(
     platformEntries,
-    platformFilters,
     param,
-    url
+    url,
+    applyFilters
   ));
 
   window.addEventListener("popstate", _ => {
     url = new URL(document.location);
-    filterElements(imageEntries, imageFilters, url);
-    filterElements(platformEntries, platformFilters, url);
+    applyFilters();
     updateSelectValues(url);
   });
 
-  filterElements(imageEntries, imageFilters, url);
-  filterElements(platformEntries, platformFilters, url);
+  // Start by applying any filters passed in via the URL
+  applyFilters();
 }
 
 function renderImages(data) {
@@ -300,7 +306,7 @@ function filterElements(elementsWithData, allFilters, url) {
   });
 }
 
-function setupFiltering(elementsWithData, possibleFilters, thisFilter, url) {
+function setupFiltering(elementsWithData, thisFilter, url, applyFilters) {
   const select = getFilterSelectElement(thisFilter);
   if (!select) {
     return;
@@ -326,7 +332,8 @@ function setupFiltering(elementsWithData, possibleFilters, thisFilter, url) {
       url.searchParams.delete(thisFilter);
     }
 
-    filterElements(elementsWithData, possibleFilters, url);
+    // Re-apply all filters so image visibility reflects platform filtering.
+    applyFilters();
     window.history.pushState({}, "", url);
   });
 }
@@ -350,6 +357,28 @@ function getFilterSelectElement(filterKey) {
   }
 
   return select;
+}
+
+// After platform filtering, hide any image entries that no longer have a
+// visible platform. Only enforced when a platform filter (currently 'arch')
+// is active, so clearing the platform filter restores images (subject to
+// image-only filters).
+function hideImagesWithoutVisiblePlatforms(imageEntries, platformEntries, url) {
+  const archFilterActive = !!(url.searchParams.get("arch"));
+  if (!archFilterActive) {
+    return; // Nothing to do; images already filtered by image filters.
+  }
+
+  imageEntries.forEach(image => {
+    if (image.hidden) {
+      return; // Already hidden by image filters.
+    }
+    const platforms = image.querySelectorAll("#platform-entry");
+    const anyVisible = Array.from(platforms).some(p => !p.hidden);
+    if (!anyVisible) {
+      image.hidden = true;
+    }
+  });
 }
 
 function getMajorMinorVersion(version) {
