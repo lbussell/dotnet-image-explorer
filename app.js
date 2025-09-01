@@ -4,6 +4,9 @@
 
 window.onload = main;
 
+const filterParams = ["repo", "osfamily", "isdistroless", "globalization"];
+const nonFilterParams = ["ref", "file"];
+
 async function main() {
 
   const imagesList = document.getElementById("images-list");
@@ -12,8 +15,6 @@ async function main() {
   }
 
   var url = new URL(window.location);
-  const filterParams = ["repo", "osfamily", "isdistroless", "globalization"];
-  const nonFilterParams = ["ref", "file"];
   const ref = url.searchParams.get("ref") ?? "refs/heads/main";
   const file = url.searchParams.get("file") ?? "dotnet-dotnet-docker-main";
 
@@ -28,105 +29,15 @@ async function main() {
   // Get all the rendered image entries back from the DOM.
   const imageEntries = imagesList.querySelectorAll("#image-entry");
 
-  filterParams.forEach(param => setupImageFilter(imageEntries, param));
+  filterParams.forEach(param => setupImageFilter(imageEntries, param, url));
 
   window.addEventListener("popstate", _ => {
     url = new URL(document.location);
-    filterImages(imageEntries);
-    updateSelectValues();
+    filterImages(imageEntries, url);
+    updateSelectValues(url);
   });
 
-  filterImages(imageEntries);
-
-  function setupImageFilter(imageEntries, datasetFilter) {
-    // Populate options with all unique values of data among the images list
-    const options = [];
-    imageEntries.forEach(image => {
-      const data = image.dataset[datasetFilter];
-      if (!options.includes(data)) {
-        options.push(data);
-      }
-    });
-
-    // And then attach them to the DOM
-    const selectId = `${datasetFilter}-filter`;
-    const select = document.getElementById(selectId);
-    if (!select) {
-      console.warn(
-        `Element with id '${selectId}' not found.`
-        + " Skipping filter setup."
-        + " Did you forget to add the 'select' element to the HTML?"
-      );
-
-      return;
-    }
-
-    const allOption = document.createElement("option");
-    allOption.value = "";
-    allOption.textContent = "All";
-    select.appendChild(allOption);
-
-    options.forEach(optionValue => {
-      const option = document.createElement("option");
-      option.value = optionValue;
-      option.textContent = optionValue;
-      select.appendChild(option);
-    });
-
-    // Load the selector with the initial filter value, if it was passed in via the URL
-    const urlParam = url.searchParams.get(datasetFilter);
-    if (urlParam && options.includes(urlParam)) {
-      select.value = urlParam;
-    }
-
-    // When we change one of the selectors, we need to update the URL's search
-    // params, filter the images, and then update the browser's URL
-    select.addEventListener("change", ({ currentTarget }) => {
-
-      // We don't want to show empty params in the URL
-      if (currentTarget.value !== "") {
-        url.searchParams.set(datasetFilter, currentTarget.value);
-      } else {
-        url.searchParams.delete(datasetFilter);
-      }
-
-      filterImages(imageEntries);
-      window.history.pushState({}, "", url);
-    });
-  }
-
-  function filterImages(imageEntries) {
-    imageEntries.forEach(image => {
-
-      // Only show the image if we match all the filters
-      var hidden = false;
-      url.searchParams.keys()
-        .filter(key => !nonFilterParams.includes(key))
-        .forEach(filterKey => {
-          if (hidden) {
-            return;
-          }
-
-          const filterValue = url.searchParams.get(filterKey);
-          const imageValue = image.dataset[filterKey];
-          if (filterValue !== "" && imageValue !== filterValue) {
-            hidden = true;
-          }
-        });
-
-      image.hidden = hidden;
-    });
-  }
-
-  function updateSelectValues() {
-    filterParams.forEach(filterKey => {
-      const select = document.getElementById(`${filterKey}-filter`);
-      const value = url.searchParams.get(filterKey) ?? "";
-      if (select) {
-        select.value = value;
-      }
-    });
-  }
+  filterImages(imageEntries, url);
 }
 
 function renderImages(data) {
@@ -307,4 +218,108 @@ function getShaPart(fullImageRef) {
 
 function wrapInCode(text) {
   return `<code class="code-bg">${text}</code>`;
+}
+
+function getUniqueDatasetValues(elementsWithData, key) {
+  const uniqueValues = [];
+  elementsWithData.forEach(element => {
+    const data = element.dataset[key];
+    if (!uniqueValues.includes(data)) {
+      uniqueValues.push(data);
+    }
+  });
+
+  return uniqueValues;
+}
+
+function populateOptions(selectElement, options) {
+  const allOption = document.createElement("option");
+  allOption.value = "";
+  allOption.textContent = "All";
+  selectElement.appendChild(allOption);
+
+  options.forEach(optionValue => {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = optionValue;
+    selectElement.appendChild(option);
+  });
+}
+
+function filterImages(imageEntries, url) {
+  imageEntries.forEach(image => {
+    var hidden = false;
+
+    // Only show the image if we match all the filters
+    filterParams.forEach(filterKey => {
+      if (hidden) {
+        return;
+      }
+
+      const filterValue = url.searchParams.get(filterKey);
+      const imageValue = image.dataset[filterKey];
+
+      if (
+        filterValue !== null
+        && filterValue !== ""
+        && imageValue !== filterValue
+      ) {
+        hidden = true;
+      }
+    });
+
+    image.hidden = hidden;
+  });
+}
+
+function setupImageFilter(imageEntries, datasetFilter, url) {
+  const select = getFilterSelectElement(datasetFilter);
+  if (!select) {
+    return;
+  }
+
+  // Populate options with all unique values of data among the images list
+  const options = getUniqueDatasetValues(imageEntries, datasetFilter);
+  populateOptions(select, options);
+
+  // Load the selector with the initial filter value, if it was passed in via the URL
+  const urlParam = url.searchParams.get(datasetFilter);
+  if (urlParam && options.includes(urlParam)) {
+    select.value = urlParam;
+  }
+
+  // When we change one of the selectors, we need to update the URL's search
+  // params, filter the images, and then update the browser's URL
+  select.addEventListener("change", ({ currentTarget }) => {
+    // We don't want to show empty params in the URL
+    if (currentTarget.value !== "") {
+      url.searchParams.set(datasetFilter, currentTarget.value);
+    } else {
+      url.searchParams.delete(datasetFilter);
+    }
+
+    filterImages(imageEntries, url);
+    window.history.pushState({}, "", url);
+  });
+}
+
+function updateSelectValues(url) {
+  filterParams.forEach(filterKey => {
+    const select = getFilterSelectElement(filterKey);
+    const value = url.searchParams.get(filterKey) ?? "";
+    if (select) {
+      select.value = value;
+    }
+  });
+}
+
+function getFilterSelectElement(filterKey) {
+  const id = `${filterKey}-filter`;
+  const select = document.getElementById(id);
+
+  if (!select) {
+    console.error(`Element with id '${id}' not found.`);
+  }
+
+  return select;
 }
