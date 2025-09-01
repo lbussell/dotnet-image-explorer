@@ -12,6 +12,7 @@ async function main() {
   }
 
   var url = new URL(window.location);
+  const filterParams = ["repo", "osfamily", "isdistroless", "globalization"];
   const nonFilterParams = ["ref", "file"];
   const ref = url.searchParams.get("ref") ?? "refs/heads/main";
   const file = url.searchParams.get("file") ?? "dotnet-dotnet-docker-main";
@@ -27,10 +28,7 @@ async function main() {
   // Get all the rendered image entries back from the DOM.
   const imageEntries = imagesList.querySelectorAll("#image-entry");
 
-  setupImageFilter(imageEntries, "repo");
-  setupImageFilter(imageEntries, "osfamily");
-  setupImageFilter(imageEntries, "isdistroless");
-  setupImageFilter(imageEntries, "globalization");
+  filterParams.forEach(param => setupImageFilter(imageEntries, param));
 
   window.addEventListener("popstate", _ => {
     url = new URL(document.location);
@@ -121,15 +119,13 @@ async function main() {
   }
 
   function updateSelectValues() {
-    url.searchParams.keys()
-      .filter(key => !nonFilterParams.includes(key))
-      .forEach(filterKey => {
-        const select = document.getElementById(`${filterKey}-filter`);
-        const value = url.searchParams.get(filterKey);
-        if (value && select) {
-          select.value = value;
-        }
-      });
+    filterParams.forEach(filterKey => {
+      const select = document.getElementById(`${filterKey}-filter`);
+      const value = url.searchParams.get(filterKey) ?? "";
+      if (select) {
+        select.value = value;
+      }
+    });
   }
 }
 
